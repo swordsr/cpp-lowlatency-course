@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    # Apple Silicon runner — same platform as the coursework laptop.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ninja
+        run: brew install ninja
+
+      - name: Cache fetched dependencies
+        uses: actions/cache@v4
+        with:
+          path: build/debug/_deps
+          key: deps-${{ runner.os }}-${{ hashFiles('cmake/Dependencies.cmake') }}
+
+      - name: Configure
+        run: cmake --preset debug
+
+      # The required check: scaffolding (stubs + tests + benches) must always compile.
+      - name: Build
+        run: cmake --build --preset debug
+
+      # Informational: tests are EXPECTED to fail until assignments are implemented.
+      - name: Run tests (non-blocking)
+        run: |
+          ctest --preset debug --output-junit test-results.xml || true
+
+      - name: Progress summary
+        if: always()
+        run: python3 .github/scripts/summarize_tests.py build/debug/test-results.xml >> "$GITHUB_STEP_SUMMARY"
