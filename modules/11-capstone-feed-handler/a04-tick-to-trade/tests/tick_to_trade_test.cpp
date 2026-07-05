@@ -1,5 +1,6 @@
 // The spec for m11a04: the histogram must be populated, plausible, and
 // in agreement with the stats. Runs your entire stack over loopback.
+#include "course/jthread.hpp"
 #include "course/md_encode.hpp"
 #include "course/pipeline.hpp"
 
@@ -24,7 +25,7 @@ public:
     bool ok() const { return listener_.has_value(); }
     std::uint16_t port() const { return listener_->local_port(); }
     void run() {
-        server_ = std::jthread{[this] {
+        server_ = course::Jthread{[this] {
             auto conn = listener_->accept_one();
             if (!conn) return;
             char buf[512];
@@ -41,7 +42,7 @@ public:
 
 private:
     std::optional<TcpListener> listener_;
-    std::jthread server_;
+    course::Jthread server_;
     std::atomic<std::uint64_t> lines_{0};
 };
 

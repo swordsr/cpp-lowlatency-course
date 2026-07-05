@@ -1,5 +1,6 @@
 // The spec for m08a01. The stress test is deadline-bounded: a broken
 // ring FAILS within seconds, it never hangs. Green = debug + asan + tsan.
+#include "course/jthread.hpp"
 #include "course/spsc_ring.hpp"
 
 #include <gtest/gtest.h>
@@ -77,13 +78,13 @@ TEST(SpscRing, SpscStressPreservesSequence) {
     std::vector<std::int64_t> received;
     received.reserve(kCount);
 
-    std::jthread consumer{[&] {
+    course::Jthread consumer{[&] {
         while (static_cast<std::int64_t>(received.size()) < kCount &&
                std::chrono::steady_clock::now() < deadline) {
             if (auto v = ring.try_pop()) received.push_back(*v);
         }
     }};
-    std::jthread producer{[&] {
+    course::Jthread producer{[&] {
         for (std::int64_t i = 0; i < kCount; ++i) {
             while (!ring.try_push(i)) {
                 if (std::chrono::steady_clock::now() >= deadline) return;

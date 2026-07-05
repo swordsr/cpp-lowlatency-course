@@ -2,6 +2,7 @@
 // (producer_id << 32 | sequence) so consumers can verify per-producer
 // FIFO order — the property Vyukov's design guarantees and broken
 // implementations lose first. Deadline-bounded; green = debug+asan+tsan.
+#include "course/jthread.hpp"
 #include "course/mpmc_queue.hpp"
 
 #include <gtest/gtest.h>
@@ -84,7 +85,7 @@ TEST(MpmcQueue, MpmcStressConservesAndOrdersPerProducer) {
     // last-seen. No cross-consumer coordination needed.
     std::atomic<bool> order_ok{true};
 
-    std::vector<std::jthread> consumers;
+    std::vector<course::Jthread> consumers;
     for (int c = 0; c < kConsumers; ++c) {
         consumers.emplace_back([&] {
             std::int64_t last_seen[kProducers];
@@ -108,7 +109,7 @@ TEST(MpmcQueue, MpmcStressConservesAndOrdersPerProducer) {
         });
     }
     {
-        std::vector<std::jthread> producers;
+        std::vector<course::Jthread> producers;
         for (int p = 0; p < kProducers; ++p) {
             producers.emplace_back([&, p] {
                 for (std::int64_t i = 0; i < kPerProducer; ++i) {

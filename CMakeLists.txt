@@ -10,6 +10,12 @@ include(cmake/Sanitizers.cmake)
 include(cmake/Dependencies.cmake)
 include(cmake/CourseAssignment.cmake)
 
+# Course-wide portability shims (course::Jthread etc.) — available to
+# every assignment's targets via course_assignment().
+add_library(course_common INTERFACE)
+target_include_directories(course_common INTERFACE
+    "${CMAKE_CURRENT_SOURCE_DIR}/common/include")
+
 enable_testing()
 
 # Modules are scaffolded one at a time; pick up whichever exist.

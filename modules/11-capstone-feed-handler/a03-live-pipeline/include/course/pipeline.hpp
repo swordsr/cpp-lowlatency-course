@@ -7,6 +7,7 @@
 #include <thread>
 
 #include "course/book_builder.hpp"       // m11a02 (and m11a01/m10a01 beneath)
+#include "course/jthread.hpp"            // course::Jthread for your threads
 #include "course/latency_histogram.hpp"  // m06a01 — a04's ruler
 #include "course/sockets.hpp"            // m09a01
 #include "course/spsc_ring.hpp"          // m08a01

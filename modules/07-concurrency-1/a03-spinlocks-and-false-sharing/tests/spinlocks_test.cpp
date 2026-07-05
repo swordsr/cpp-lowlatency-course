@@ -1,6 +1,7 @@
 // The spec for m07a03. The mutual-exclusion tests protect a PLAIN int64
 // with your lock: if the lock is broken the count comes out wrong here,
 // and the tsan preset names the race outright. Green = debug + asan + tsan.
+#include "course/jthread.hpp"
 #include "course/spinlocks.hpp"
 
 #include <gtest/gtest.h>
@@ -25,7 +26,7 @@ std::int64_t hammer_counter(int threads, int iters_per_thread) {
     Lock lock;
     std::int64_t counter = 0;  // plain! the lock is its only protection
     {
-        std::vector<std::jthread> workers;
+        std::vector<course::Jthread> workers;
         for (int t = 0; t < threads; ++t) {
             workers.emplace_back([&] {
                 for (int i = 0; i < iters_per_thread; ++i) {
@@ -44,13 +45,13 @@ void check_try_lock_semantics() {
     EXPECT_TRUE(lock.try_lock()) << "free lock must be acquirable";
 
     bool second_attempt = true;
-    std::jthread other{[&] { second_attempt = lock.try_lock(); }};
+    course::Jthread other{[&] { second_attempt = lock.try_lock(); }};
     other.join();
     EXPECT_FALSE(second_attempt) << "held lock must refuse try_lock";
 
     lock.unlock();
     bool third_attempt = false;
-    std::jthread another{[&] {
+    course::Jthread another{[&] {
         third_attempt = lock.try_lock();
         if (third_attempt) lock.unlock();
     }};
@@ -119,7 +120,7 @@ TEST(FalseSharing, PaddedCountersDoNot) {
 TEST(FalseSharing, PaddedCountersStillCount) {
     PaddedCounters c;
     {
-        std::vector<std::jthread> workers;
+        std::vector<course::Jthread> workers;
         workers.emplace_back([&] {
             for (int i = 0; i < 10'000; ++i) c.add_a(1);
         });

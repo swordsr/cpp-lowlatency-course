@@ -2,6 +2,7 @@
 // the spec lives in (a) the tsan preset — a relaxed MailBox payload
 // handoff is a data race and tsan says so — and (b) the litmus bench you
 // run on your ARM Mac. Green means: debug + asan + TSAN.
+#include "course/jthread.hpp"
 #include "course/ordering.hpp"
 
 #include <gtest/gtest.h>
@@ -57,7 +58,7 @@ TEST(MailBox, SpscStressDeliversEverythingInOrder) {
     std::vector<std::int64_t> received;
     received.reserve(kN);
 
-    std::jthread consumer{[&] {
+    course::Jthread consumer{[&] {
         while (static_cast<std::int64_t>(received.size()) < kN &&
                std::chrono::steady_clock::now() < deadline) {
             if (auto v = box.take()) received.push_back(*v);
@@ -105,7 +106,7 @@ TEST(LazyBoxTest, ConcurrentGetCreatesExactlyOnce) {
     LazyBox<Expensive> box;
     std::vector<Expensive*> seen(kThreads, nullptr);
     {
-        std::vector<std::jthread> threads;
+        std::vector<course::Jthread> threads;
         for (int t = 0; t < kThreads; ++t) {
             threads.emplace_back(
                 [&box, &seen, t] { seen[t] = &box.get_or_create(5); });
@@ -132,7 +133,7 @@ TEST(RelaxedCounterTest, ConcurrentAddsAllLand) {
     constexpr int kPerThread = 100'000;
     RelaxedCounter c;
     {
-        std::vector<std::jthread> threads;
+        std::vector<course::Jthread> threads;
         for (int t = 0; t < kThreads; ++t) {
             threads.emplace_back([&c] {
                 for (int i = 0; i < kPerThread; ++i) c.add(1);

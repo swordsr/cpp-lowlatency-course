@@ -1,6 +1,7 @@
 // The spec for m11a03. Full-system tests over loopback: the test plays
 // exchange (UDP feed in, TCP gateway out), your Pipeline plays firm.
 // Deadline-bounded throughout; tsan-green is part of done.
+#include "course/jthread.hpp"
 #include "course/md_encode.hpp"
 #include "course/pipeline.hpp"
 
@@ -29,7 +30,7 @@ public:
     std::uint16_t port() const { return listener_->local_port(); }
 
     void run() {
-        server_ = std::jthread{[this] {
+        server_ = course::Jthread{[this] {
             auto conn = listener_->accept_one();
             if (!conn) return;
             char buf[512];
@@ -64,7 +65,7 @@ public:
 
 private:
     std::optional<TcpListener> listener_;
-    std::jthread server_;
+    course::Jthread server_;
     mutable std::mutex mu_;
     std::string partial_;
     std::vector<std::string> lines_;

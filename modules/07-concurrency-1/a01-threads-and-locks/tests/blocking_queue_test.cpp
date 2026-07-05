@@ -2,6 +2,7 @@
 // 60s ctest timeout killing the test — that's a failure telling you
 // about a lost wakeup, not a flaky test. Green must include the tsan
 // preset.
+#include "course/jthread.hpp"
 #include "course/blocking_queue.hpp"
 
 #include <gtest/gtest.h>
@@ -44,7 +45,7 @@ TEST(BlockingQueue, PopBlocksUntilPushArrives) {
     BlockingQueue<int> q;
     std::optional<int> got;
 
-    std::jthread consumer{[&] { got = q.pop(); }};
+    course::Jthread consumer{[&] { got = q.pop(); }};
     std::this_thread::sleep_for(50ms);  // let the consumer reach the wait
     EXPECT_FALSE(got.has_value()) << "pop must BLOCK on an empty queue, "
                                      "not return early";
@@ -57,7 +58,7 @@ TEST(BlockingQueue, CloseWakesBlockedConsumers) {
     BlockingQueue<int> q;
     std::atomic<int> finished{0};
 
-    std::vector<std::jthread> consumers;
+    std::vector<course::Jthread> consumers;
     for (int i = 0; i < 3; ++i) {
         consumers.emplace_back([&] {
             EXPECT_EQ(q.pop(), std::nullopt);
@@ -93,7 +94,7 @@ TEST(BlockingQueue, MpmcConservesEveryItem) {
     std::atomic<std::int64_t> consumed_sum{0};
     std::atomic<std::int64_t> consumed_count{0};
 
-    std::vector<std::jthread> consumers;
+    std::vector<course::Jthread> consumers;
     for (int c = 0; c < kConsumers; ++c) {
         consumers.emplace_back([&] {
             while (auto item = q.pop()) {
@@ -103,7 +104,7 @@ TEST(BlockingQueue, MpmcConservesEveryItem) {
         });
     }
     {
-        std::vector<std::jthread> producers;
+        std::vector<course::Jthread> producers;
         for (int p = 0; p < kProducers; ++p) {
             producers.emplace_back([&, p] {
                 for (int i = 0; i < kPerProducer; ++i) {
@@ -125,7 +126,7 @@ TEST(BlockingQueue, SingleProducerSingleConsumerPreservesOrder) {
     BlockingQueue<int> q;
     std::vector<int> received;
 
-    std::jthread consumer{[&] {
+    course::Jthread consumer{[&] {
         while (auto item = q.pop()) received.push_back(*item);
     }};
     for (int i = 0; i < 1'000; ++i) ASSERT_TRUE(q.push(i));

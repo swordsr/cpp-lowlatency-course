@@ -21,15 +21,18 @@ function(course_assignment)
     if(ARG_LIB)
         add_library(${ARG_ID} STATIC ${ARG_LIB})
         target_include_directories(${ARG_ID} PUBLIC include)
+        target_link_libraries(${ARG_ID} PUBLIC course_common)
         target_compile_options(${ARG_ID} PRIVATE -Wall -Wextra -Wpedantic)
     else()
         add_library(${ARG_ID} INTERFACE)
         target_include_directories(${ARG_ID} INTERFACE include)
+        target_link_libraries(${ARG_ID} INTERFACE course_common)
     endif()
 
     if(ARG_TESTS)
         add_executable(${ARG_ID}_tests ${ARG_TESTS})
-        target_link_libraries(${ARG_ID}_tests PRIVATE ${ARG_ID} GTest::gtest_main)
+        target_link_libraries(${ARG_ID}_tests
+            PRIVATE ${ARG_ID} GTest::gtest_main course_common)
         target_compile_options(${ARG_ID}_tests PRIVATE -Wall -Wextra)
         # TIMEOUT: a deadlocked test (hello, concurrency modules) fails
         # after 60s instead of hanging ctest forever.
@@ -41,7 +44,8 @@ function(course_assignment)
 
     if(ARG_BENCH)
         add_executable(${ARG_ID}_bench ${ARG_BENCH})
-        target_link_libraries(${ARG_ID}_bench PRIVATE ${ARG_ID} benchmark::benchmark_main)
+        target_link_libraries(${ARG_ID}_bench
+            PRIVATE ${ARG_ID} benchmark::benchmark_main course_common)
         target_compile_options(${ARG_ID}_bench PRIVATE -Wall -Wextra)
     endif()
 endfunction()

@@ -1,6 +1,7 @@
 // The spec for m09a01. Real loopback traffic: your listener + your
 // client on kernel-assigned ephemeral ports (no collisions, no sudo).
 // Blocking calls are covered by the 60s ctest timeout.
+#include "course/jthread.hpp"
 #include "course/sockets.hpp"
 
 #include <gtest/gtest.h>
@@ -49,7 +50,7 @@ TEST(Tcp, EchoRoundTrip) {
     const auto port = listener->local_port();
     ASSERT_GT(port, 0);
 
-    std::jthread server{[&] {
+    course::Jthread server{[&] {
         auto conn = listener->accept_one();
         if (!conn) return;
         char buf[128];
@@ -72,7 +73,7 @@ TEST(Tcp, RecvReportsEofAsZero) {
     ASSERT_TRUE(listener.has_value());
     const auto port = listener->local_port();
 
-    std::jthread server{[&] {
+    course::Jthread server{[&] {
         auto conn = listener->accept_one();
         // conn destroyed immediately: orderly close.
     }};
@@ -92,7 +93,7 @@ TEST(Tcp, SendAllSurvivesLargePayloads) {
     ASSERT_TRUE(listener.has_value());
     const auto port = listener->local_port();
 
-    std::jthread server{[&] {
+    course::Jthread server{[&] {
         auto conn = listener->accept_one();
         if (!conn) return;
         std::size_t total = 0;
@@ -118,7 +119,7 @@ TEST(Tcp, SendAllSurvivesLargePayloads) {
 TEST(Tcp, NodelayIsReallySet) {
     auto listener = TcpListener::bind_any(0);
     ASSERT_TRUE(listener.has_value());
-    std::jthread server{[&] { auto conn = listener->accept_one(); }};
+    course::Jthread server{[&] { auto conn = listener->accept_one(); }};
 
     auto client = TcpStream::connect_local(listener->local_port());
     ASSERT_TRUE(client.has_value());

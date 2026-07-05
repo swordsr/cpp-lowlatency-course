@@ -24,6 +24,15 @@ forgetting `join()` isn't a leak, it's `std::terminate`. C++20's
 cooperative cancellation via `std::stop_token`. Use `jthread` by default;
 know `thread` exists because every codebase predates it.
 
+> **Toolchain reality check:** Apple's libc++ *still* hasn't shipped
+> `std::jthread` (libstdc++ has had it for years) — so the course
+> provides `course::Jthread` in `common/include/course/jthread.hpp`:
+> the real `std::jthread` where available, a join-on-destruction
+> wrapper where not. Use it in your code; learn `std::jthread`'s name
+> and semantics for interviews. "Library support lags the standard —
+> check the implementation status pages" is itself a lesson worth the
+> detour.
+
 Cost intuition: creating a thread is ~10–50µs (syscall, stack allocation)
 — never on a hot path; a context switch ~1–10µs plus cache pollution.
 Trading systems create all threads at startup, pin them to cores, and

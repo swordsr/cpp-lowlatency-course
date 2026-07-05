@@ -7,6 +7,7 @@
 // Read the counters, not the wall time: p50/p99/p999 in NANOSECONDS,
 // plus drops. Expect the flat region at low rates and the knee as the
 // rate climbs (README THEORY §2). Skipped until the pipeline works.
+#include "course/jthread.hpp"
 #include "course/md_encode.hpp"
 #include "course/pipeline.hpp"
 
@@ -26,7 +27,7 @@ public:
     bool ok() const { return listener_.has_value(); }
     std::uint16_t port() const { return listener_->local_port(); }
     void run() {
-        server_ = std::jthread{[this] {
+        server_ = course::Jthread{[this] {
             auto conn = listener_->accept_one();
             if (!conn) return;
             char buf[4096];
@@ -39,7 +40,7 @@ public:
 
 private:
     std::optional<TcpListener> listener_;
-    std::jthread server_;
+    course::Jthread server_;
 };
 
 void BM_TickToTrade(benchmark::State& state) {

@@ -97,7 +97,8 @@ the real pipeline over loopback with deadline bounds.
 Config, BookBuilder, UdpSocket + TcpStream (optionals — born in
 start()), two rings (<code>SpscRing&lt;TopOfBook, 1024&gt;</code>,
 <code>SpscRing&lt;OrderRequest, 1024&gt;</code>), three
-<code>std::jthread</code>s, <code>std::atomic&lt;bool&gt; stop_</code>,
+<code>course::Jthread</code>s (m07a01's shim — Apple's libc++ lacks
+std::jthread), <code>std::atomic&lt;bool&gt; stop_</code>,
 and the stats atomics. Declaration order = destruction order in
 reverse — threads before sockets means threads die first. Think it
 through once; it saves a shutdown crash.

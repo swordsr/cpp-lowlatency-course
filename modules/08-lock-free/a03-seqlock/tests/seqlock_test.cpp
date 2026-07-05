@@ -1,6 +1,7 @@
 // The spec for m08a03. The torn-snapshot stress is the real referee:
 // every loaded snapshot must be internally consistent (all four fields
 // from the SAME store). Deadline-bounded. Green = debug + asan + tsan.
+#include "course/jthread.hpp"
 #include "course/seqlock.hpp"
 
 #include <gtest/gtest.h>
@@ -68,7 +69,7 @@ TEST(SeqLockTest, NoTornSnapshotsUnderWriteStorm) {
     std::atomic<std::int64_t> torn{0};
     std::atomic<std::int64_t> reads{0};
 
-    std::vector<std::jthread> readers;
+    std::vector<course::Jthread> readers;
     for (int r = 0; r < 3; ++r) {
         readers.emplace_back([&] {
             while (!stop.load(std::memory_order_relaxed)) {
