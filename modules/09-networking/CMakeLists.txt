@@ -1,0 +1,7 @@
+add_subdirectory(a01-sockets)
+if(APPLE)
+    add_subdirectory(a02-kqueue-event-loop)
+else()
+    message(STATUS "m09a02 (kqueue) skipped: requires macOS/BSD")
+endif()
+add_subdirectory(a03-binary-protocol-parsing)
