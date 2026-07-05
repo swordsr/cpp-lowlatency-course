@@ -31,10 +31,12 @@ function(course_assignment)
         add_executable(${ARG_ID}_tests ${ARG_TESTS})
         target_link_libraries(${ARG_ID}_tests PRIVATE ${ARG_ID} GTest::gtest_main)
         target_compile_options(${ARG_ID}_tests PRIVATE -Wall -Wextra)
+        # TIMEOUT: a deadlocked test (hello, concurrency modules) fails
+        # after 60s instead of hanging ctest forever.
         gtest_discover_tests(${ARG_ID}_tests
             TEST_PREFIX "${ARG_ID}."
             DISCOVERY_TIMEOUT 30
-            PROPERTIES LABELS "${ARG_ID}")
+            PROPERTIES LABELS "${ARG_ID}" TIMEOUT 60)
     endif()
 
     if(ARG_BENCH)
